@@ -8,6 +8,7 @@ import { NumberFormatter } from "../support/NumberFormatter";
 import { Evaluator } from "../support/Evaluator";
 import { InputBuffer } from "../support/InputBuffer";
 import { DivisionByZeroError } from "../error/DivisionByZeroError";
+// import { ErrorHandler } from "./handlers/ErrorHandler";
 
 
 export class Calculator {
@@ -73,7 +74,6 @@ export class Calculator {
         this.display.render(this.buffer.toString());
         this.display.displayHistoryOne(this.buffer.toString());
         this.state = CalcState.InputtingFirst;
-        console.log(`一つ目の入力: ${this.buffer.toString()}`);
         break;
       }
 
@@ -153,7 +153,7 @@ export class Calculator {
   public handleOperator(op: Operation): void {
     // InputBufferを用いて取得した「現在の入力」 = 元currentInput 的な役割
     // 条件分岐がstring型が多いのでgetValue()
-    const currentString = this.buffer.getValueByString();
+    const currentString = this.buffer.toString();
 
     switch (this.state) {
       /**
@@ -188,7 +188,6 @@ export class Calculator {
         this.buffer.clear();
         this.display.displayHistoryOperator(op);
         this.state = CalcState.OperatorEntered;
-        console.log(`handleOperatorの確認: ${this.operator}`);
         return;
       }
 
@@ -205,22 +204,13 @@ export class Calculator {
         }
 
         // なぜ: 計算途中でも正しくディスプレイに表示するため / 前提条件: 演算子 が設定されている時
-        // const hadOperator = this.operator !== null;   // operator が null でなければ(つまりあれば)
         if (this.operator) {
           this.handleEqual();
         }
 
-        // なぜ： handleEqualの this.left を優先（取得）するため / operator がない時（handleEqual で null になっている）
-        // 演算子押下2回目以降はこっち「8 * 7 + 4」など
-        // if (!hadOperator) {
-        //   this.left = this.buffer.toNumber();
-        //   console.log(`this.left: ${this.left}`);
-        // }
-
         // なぜ: 新しい計算に備えて準備するため / 前提条件: 演算子ボタンが押された時
         this.operator = op;
         this.buffer.clear();
-        console.log(`handleOperatorの確認: ${this.operator}`)
         this.display.displayHistoryOperator(op);
         this.state = CalcState.OperatorEntered;
         return;
@@ -271,9 +261,7 @@ export class Calculator {
 
         // なぜ: 文字列を数値へ変更するため　/ 前提条件: 1つ目の数字と２つ目の数字が入力されている時
         const PRE_NUMBER = Number(this.left);
-        console.log(`PRE_NUMBER: ${PRE_NUMBER}`);
         const CURRENT_NUMBER = currentNumber;
-        console.log(`CURRENT_NUMBER: ${CURRENT_NUMBER}`);
         if (isNaN(PRE_NUMBER) || isNaN(CURRENT_NUMBER)) {
           this.display.renderError(Config.ERROR_MESSAGE);
           this.state = CalcState.Error;
@@ -281,24 +269,6 @@ export class Calculator {
         }
 
         try {
-          // const evaluatorResult = this.evaluator.operatorSwitch(PRE_NUMBER, this.operator as Operation, CURRENT_NUMBER);
-          // const format = this.formatter.formatForDisplay(evaluatorResult);
-
-          // // なぜ: 計算履歴を保存するため　/ 前提条件: 計算ボタンが押された時
-          // this.lastOperator = this.operator;
-          // this.lastResult = CURRENT_NUMBER;
-          // this.left = Number(format);
-          // this.operator = null;   // 初期化               
-
-          // this.display.render(format);
-
-          // this.display.displayHistoryOne(format);
-          // this.display.displayHistoryOperator(this.buffer.clear());
-          // this.display.displayHistoryTwo(this.buffer.clear());
-
-          // console.log(`handleEqualの確認: ${format}`);
-          // this.state = CalcState.ResultShown;
-
           /**
            * 共通の計算処理（通常計算処理 と 「=」連続対応）
            */
@@ -328,20 +298,6 @@ export class Calculator {
         }
 
         try {
-          // const evaluatorResult = this.evaluator.operatorSwitch(Number(this.left), this.lastOperator, this.lastResult);
-          // const format = this.formatter.formatForDisplay(evaluatorResult);
-
-          // this.left = Number(format);   // 必要  
-
-          // this.display.render(format);
-
-          // const historyText = Number(format) - this.lastResult;   // 通常処理 と 連続押下「=」の履歴を分けるために必要
-          // this.display.displayHistoryOne(historyText.toString());
-          // this.display.displayHistoryOperator(this.lastOperator);
-          // this.display.displayHistoryTwo(this.lastResult.toString());
-
-          // console.log(`handleEqualの確認: ${format}`);
-
           /**
            * 共通の計算処理（通常計算処理 と 「=」連続対応）
            */
@@ -406,7 +362,7 @@ export class Calculator {
    * @return なし
    * @detail try-catch-finally の catch の共通「エラー」表記関数
    ********************************************************/
-  private handleError(error: unknown): void {
+  public handleError(error: unknown): void {
     if (error instanceof DivisionByZeroError) {
       this.display.renderError("エラー");
       console.error("Division by zero detected.");
@@ -415,6 +371,7 @@ export class Calculator {
       console.error(error);
     }
     this.state = CalcState.Error;
+    // this.state = this.errorHandler.handle(error);
   }
 
   /*******************************************************************
@@ -426,7 +383,7 @@ export class Calculator {
    * @return なし
    * @detail handleEqual()の共通の計算処理関数（通常計算処理 と 「=」連続対応）
    ******************************************************************/
-  private performEvaluation(left: number, op: Operation, right: number): void {
+  public performEvaluation(left: number, op: Operation, right: number): void {
     const evaluatorResult = this.evaluator.operatorSwitch(left, op, right);
     const format = this.formatter.formatForDisplay(evaluatorResult);
 
@@ -446,10 +403,6 @@ export class Calculator {
       this.display.displayHistoryOperator(this.buffer.clear());
       this.display.displayHistoryTwo(this.buffer.clear());
     }
-    // this.display.displayHistoryOne(left.toString());
-    // this.display.displayHistoryOperator(this.lastOperator);
-    // this.display.displayHistoryTwo(this.lastResult.toString());
-    console.log(`handleEqualの確認: ${format}`);
     this.state = CalcState.ResultShown;
   }
 

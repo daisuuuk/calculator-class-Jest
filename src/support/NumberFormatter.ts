@@ -2,15 +2,15 @@
 export class NumberFormatter {
     constructor(private readonly maxDigits: number) { }
 
-    public formatForDisplay(n: number): string { /* 末尾0削除・指数切替 */
-        if (isNaN(n)) {
+    public formatForDisplay(number: number): string { /* 末尾0削除・指数切替 */
+        if (isNaN(number)) {
             return "エラー";
         }
 
         // なぜ: 10のdigits乗(倍率) → 丸めたい桁数(8位)を指定するため / 前提条件: 小数点以下桁数の多い値がある時
         const factor = 10 ** this.maxDigits;
         // なぜ: factor倍して整数にしたあと四捨五入し、倍率を戻すことで小数点以下を丸めた結果にするため
-        const rounded = Math.round(n * factor) / factor;
+        const rounded = Math.round(number * factor) / factor;
 
         // なぜ：末尾の0を削除するため
         let formatted = rounded.toString();

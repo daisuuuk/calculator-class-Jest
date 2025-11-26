@@ -2,7 +2,7 @@
 export class InputBuffer {
     constructor(private readonly maxDigits: number, private value = "") { }
 
-    public pushDigit(d: string): void {
+    public pushDigit(digit: string): void {
         // 小数点は桁数制限に含めない
         // なぜ: 8桁入力制限にするため　/ 前提条件: 9桁目が入力された時　①
         if (this.digitCount() >= this.maxDigits) {
@@ -10,16 +10,17 @@ export class InputBuffer {
         }
 
         // なぜ: 小数点入力制限のため（１個のみ） / 前提条件: 小数点が入力されている時　②
-        if (d === "." && this.value.includes(".")) {
+        if (digit === "." && this.value.includes(".")) {
             return;
         }
 
         // 先頭が "0" で次に数字が入力された場合 → 上書き　③
-        if (this.value === "0") {
-            this.value = d.toString();
+        if (this.value === "0" && digit !== "0") {
+            this.value = digit;
+            return;
         }
 
-        this.value += d;
+        this.value += digit;
     }
 
     public pushDecimal(): void {
@@ -41,15 +42,6 @@ export class InputBuffer {
         return Number(this.value || 0);
     }
 
-    public getValueByString(): string {   // (string型で返す)
-        return this.value;
-    }
-
-    public isEmpty(): boolean {
-        // 文字列が空なら trueを返すことで、「入力があるかどうか」を確認するメソッド
-        return this.value.length === 0;
-    }
-
     public toString(): string {
         return this.value;
     }
@@ -59,14 +51,20 @@ export class InputBuffer {
         return this.value.replace(/[.\-]/g, "").length;
     }
 
-    // 小数点入力（0. など）、空・NaN・符号だけで = 押下してもクリアされない為のメソッド
+    // なぜ： 小数点入力（0. など）、空・NaN・符号だけで = 押下してもクリアされないために
+    // 直訳：「小数点・空・NaN・符号」 を含まない文字列を「値があるかどうかの確認」を false で返す関数
+    // 「小数点・空・NaN・符号」を含む条件にしている↓↓
     public hasValue(): boolean {
-        const trimmed = this.value.toString();   // 文字列を返し
+        const trimmed = this.value.toString();   // 文字列を返し(文字列判定)
         // 「-」単独や空文字は無効とみなす()
         if (trimmed === "" || trimmed === "-") {
+            // Number() では "" は 「0」扱いの為、true になってしまう。
             return false;
         }
-        const t = Number(trimmed);       // number型へ またparseFloat()の仕様で "." はNaN
+        const t = Number(trimmed);       // number型へ またNumber()の仕様で "." はNaN
         return !isNaN(t);                    // NaNではないものを返す → NaNなので false を返す
     }
+
+
+    // trimmed === "-"　いらない？
 }

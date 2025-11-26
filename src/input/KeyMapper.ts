@@ -3,7 +3,7 @@ import { KeyToken, TOKEN_KIND } from "../token/KeyToken";
 import { Operation } from "../constant/Operation";
 
 export class KeyMapper {
-    // keyMap に格納していく: 型は KeyToken型
+    // なぜ： keyMap に格納していくため : 型は KeyToken型
     private readonly keyMap = new Map<string, KeyToken>();
 
     constructor() {
