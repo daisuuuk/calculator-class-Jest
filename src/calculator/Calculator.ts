@@ -8,7 +8,6 @@ import { NumberFormatter } from "../support/NumberFormatter";
 import { Evaluator } from "../support/Evaluator";
 import { InputBuffer } from "../support/InputBuffer";
 import { DivisionByZeroError } from "../error/DivisionByZeroError";
-// import { ErrorHandler } from "./handlers/ErrorHandler";
 
 
 export class Calculator {
